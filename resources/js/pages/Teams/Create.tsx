@@ -21,39 +21,55 @@ export default function CreateTeam() {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Create Team" />
-      <div className="max-w-2xl mx-auto p-6 mt-6 bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700">
-        <h1 className="text-2xl font-bold mb-6 text-neutral-900 dark:text-white">Create New Team</h1>
+      <div className="mx-auto max-w-2xl p-6">
+        <div className="mb-8">
+            <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">Create New Team</h1>
+            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Set up a new team and start collaborating.</p>
+        </div>
         
-        <form onSubmit={submit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Team Name</label>
-            <input 
-              type="text" 
-              value={data.name} 
-              onChange={e => setData('name', e.target.value)}
-              className="w-full rounded-md border-neutral-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-white"
-            />
-            {errors.name && <div className="text-red-500 text-sm mt-1">{errors.name}</div>}
-          </div>
+        <form onSubmit={submit} className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+            <div className="space-y-6">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">Team Name</label>
+                  <input 
+                    type="text" 
+                    value={data.name} 
+                    onChange={e => setData('name', e.target.value)}
+                    className="block w-full rounded-xl border-neutral-300 px-4 py-3 text-sm shadow-sm transition-colors focus:border-emerald-500 focus:ring-emerald-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:focus:border-emerald-500"
+                    placeholder="E.g., Engineering Squad"
+                  />
+                  {errors.name && <div className="mt-1 text-sm text-red-500">{errors.name}</div>}
+                </div>
 
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Description</label>
-            <textarea 
-              value={data.description} 
-              onChange={e => setData('description', e.target.value)}
-              className="w-full rounded-md border-neutral-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-white"
-              rows={4}
-            />
-            {errors.description && <div className="text-red-500 text-sm mt-1">{errors.description}</div>}
-          </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">Description</label>
+                  <textarea 
+                    value={data.description} 
+                    onChange={e => setData('description', e.target.value)}
+                    className="block w-full rounded-xl border-neutral-300 px-4 py-3 text-sm shadow-sm transition-colors focus:border-emerald-500 focus:ring-emerald-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:focus:border-emerald-500"
+                    rows={5}
+                    placeholder="Briefly describe the team's purpose..."
+                  />
+                  {errors.description && <div className="mt-1 text-sm text-red-500">{errors.description}</div>}
+                </div>
+            </div>
 
-          <button 
-            type="submit" 
-            disabled={processing}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            Save Team
-          </button>
+            <div className="mt-8 flex items-center justify-end gap-4 border-t border-neutral-100 pt-6 dark:border-neutral-800">
+                <button
+                    type="button"
+                    onClick={() => window.history.back()}
+                    className="rounded-lg px-4 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                >
+                    Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={processing}
+                  className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-neutral-900"
+                >
+                  Create Team
+                </button>
+            </div>
         </form>
       </div>
     </AppLayout>

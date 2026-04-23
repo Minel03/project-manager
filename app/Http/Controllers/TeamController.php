@@ -35,7 +35,26 @@ class TeamController extends Controller
     public function show(Team $team)
     {
         return Inertia::render('Teams/Show', [
-            'team' => $team
+            'team' => $team->load('users'),
+            'availableUsers' => \App\Models\User::whereNotIn('id', $team->users->pluck('id'))->get()
         ]);
+    }
+
+    public function addMember(Request $request, Team $team)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'role' => 'nullable|string'
+        ]);
+
+        $team->users()->attach($validated['user_id'], ['role' => $validated['role'] ?? 'member']);
+
+        return back();
+    }
+
+    public function removeMember(Team $team, \App\Models\User $user)
+    {
+        $team->users()->detach($user->id);
+        return back();
     }
 }

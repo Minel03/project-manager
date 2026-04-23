@@ -12,7 +12,9 @@ class ProjectController extends Controller
     public function index()
     {
         return Inertia::render('Projects/Index', [
-            'projects' => Project::all()
+            'projects' => Project::withCount(['tasks', 'tasks as completed_tasks_count' => function ($query) {
+                $query->where('status', 'done');
+            }])->get()
         ]);
     }
 
@@ -34,5 +36,14 @@ class ProjectController extends Controller
         Project::create($validated);
 
         return redirect()->route('projects.index');
+    }
+
+    public function show(Project $project)
+    {
+        return Inertia::render('Projects/Show', [
+            'project' => $project->load(['tasks.assignees'])->loadCount(['tasks', 'tasks as completed_tasks_count' => function ($query) {
+                $query->where('status', 'done');
+            }])
+        ]);
     }
 }
