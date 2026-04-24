@@ -23,6 +23,31 @@ Taskly is a modern, full-stack project management application designed for high-
 - **AI Integration**: Groq API
 - **Deployment**: Laravel Cloud
 
+## 📂 Project Structure
+
+```text
+├── app/
+│   ├── Http/Controllers/    # Core logic (Projects, Tasks, Teams, etc.)
+│   ├── Models/              # Database models & relationships
+│   └── Notifications/       # System & Task notifications
+├── config/                  # Application configuration files
+├── database/
+│   ├── migrations/          # Database schema definitions
+│   └── seeders/             # Initial data & Admin setup
+├── public/                  # Static assets & entry point
+├── resources/
+│   ├── js/
+│   │   ├── components/      # Reusable UI components
+│   │   ├── layouts/         # Page layout wrappers
+│   │   ├── lib/             # Utility functions (AI, formatting)
+│   │   └── pages/           # React views (Projects, Tasks, etc.)
+│   └── views/               # Main Blade template (app.blade.php)
+├── routes/
+│   ├── web.php              # Web routes & Inertia endpoints
+│   └── channels.php         # Real-time WebSocket channels
+└── tests/                   # Feature and Unit tests
+```
+
 ## 📦 Installation & Setup
 
 ### Prerequisites
