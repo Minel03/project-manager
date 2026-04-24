@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -18,7 +17,8 @@ class ProfileController extends Controller
             'on_time_rate' => $this->calculateOnTimeRate($user),
         ];
 
-        $activityData = ActivityLog::where('user_id', $user->id)
+        $activityData = \App\Models\Activity::where('user_id', $user->id)
+            ->where('type', 'task_completed')
             ->where('created_at', '>=', now()->subYear())
             ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
             ->groupBy('date')

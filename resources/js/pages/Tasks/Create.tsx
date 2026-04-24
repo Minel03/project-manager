@@ -1,13 +1,16 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, useForm } from '@inertiajs/react';
-import { type BreadcrumbItem } from '@/types';
+import { type BreadcrumbItem, type Project, type User } from '@/types';
+import { format } from 'date-fns';
+import { DatePicker } from '@/components/ui/date-picker';
+import { UserSelect } from '@/components/ui/user-select';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Tasks', href: '/tasks' },
     { title: 'Create', href: '/tasks/create' },
 ];
 
-export default function CreateTask({ projects, users }: { projects: any[], users: any[] }) {
+export default function CreateTask({ projects, users }: { projects: Project[], users: User[] }) {
   const { data, setData, post, processing, errors } = useForm({
     title: '',
     description: '',
@@ -86,18 +89,12 @@ export default function CreateTask({ projects, users }: { projects: any[], users
 
                 <div className="grid gap-6 md:grid-cols-2">
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">Assignees</label>
-                      <select
-                        multiple
-                        value={data.assignees}
-                        onChange={e => setData('assignees', Array.from(e.target.selectedOptions, option => option.value))}
-                        className="block w-full rounded-xl border-neutral-300 px-4 py-3 text-sm shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
-                      >
-                        {users?.map(u => (
-                          <option key={u.id} value={u.id}>{u.name}</option>
-                        ))}
-                      </select>
-                      <p className="mt-1 text-xs text-neutral-500">Hold Ctrl/Cmd to select multiple</p>
+                      <label className="mb-3 block text-sm font-medium text-neutral-700 dark:text-neutral-300">Assignees</label>
+                      <UserSelect 
+                        users={users}
+                        selectedIds={data.assignees.map(id => parseInt(id))}
+                        onChange={(ids) => setData('assignees', ids.map(id => id.toString()))}
+                      />
                       {errors.assignees && <div className="mt-1 text-sm text-red-500">{errors.assignees}</div>}
                     </div>
 
@@ -118,11 +115,9 @@ export default function CreateTask({ projects, users }: { projects: any[], users
                         </div>
                         <div>
                           <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">Due Date</label>
-                          <input
-                            type="date"
-                            value={data.due_date}
-                            onChange={e => setData('due_date', e.target.value)}
-                            className="block w-full rounded-xl border-neutral-300 px-4 py-3 text-sm shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                          <DatePicker 
+                            date={data.due_date ? new Date(data.due_date) : undefined}
+                            onChange={(date) => setData('due_date', format(date, 'yyyy-MM-dd'))}
                           />
                           {errors.due_date && <div className="mt-1 text-sm text-red-500">{errors.due_date}</div>}
                         </div>

@@ -15,6 +15,18 @@ class Task extends Model
         ];
     }
 
+    protected $appends = ['is_timer_running', 'total_minutes'];
+
+    public function getIsTimerRunningAttribute()
+    {
+        return $this->timeLogs()->where('user_id', \Illuminate\Support\Facades\Auth::id())->whereNull('end_time')->exists();
+    }
+
+    public function getTotalMinutesAttribute()
+    {
+        return (int) $this->timeLogs()->sum('duration');
+    }
+
     public function project()
     {
         return $this->belongsTo(Project::class);
@@ -28,6 +40,21 @@ class Task extends Model
     public function comments()
     {
         return $this->hasMany(TaskComment::class);
+    }
+
+    public function timeLogs()
+    {
+        return $this->hasMany(TimeLog::class);
+    }
+
+    public function blockedBy()
+    {
+        return $this->belongsTo(Task::class, 'blocked_by_id');
+    }
+
+    public function blocking()
+    {
+        return $this->hasMany(Task::class, 'blocked_by_id');
     }
 
     public function attachments()

@@ -17,6 +17,10 @@ class TaskObserver
             'action' => 'created task',
             'details' => "Created task: {$task->title}"
         ]);
+
+        if ($task->user_id && $task->user_id !== Auth::id()) {
+            $task->user->notify(new \App\Notifications\TaskAssigned($task));
+        }
     }
 
     public function updated(Task $task): void
@@ -30,6 +34,10 @@ class TaskObserver
         } elseif ($task->isDirty('priority')) {
             $action = 'changed priority';
             $details = "Set priority to {$task->priority}";
+        } elseif ($task->isDirty('user_id')) {
+            if ($task->user_id && $task->user_id !== Auth::id()) {
+                $task->user->notify(new \App\Notifications\TaskAssigned($task));
+            }
         }
 
         ActivityLog::create([

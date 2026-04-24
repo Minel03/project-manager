@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/react';
-import { FolderKanban, Plus } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { FolderKanban, Plus, Archive } from 'lucide-react';
 
 type Project = {
     id: number;
@@ -73,13 +73,20 @@ export default function Projects({ projects = [] }: { projects: Project[] }) {
                                             ></div>
                                         </div>
                                     </div>
-                                    <div className="relative z-10 mt-6 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                                    <div className="relative z-10 mt-6 flex items-center justify-between border-t border-neutral-100 pt-4 dark:border-neutral-800">
                                         <Link href={`/projects/${project.id}`} className="inline-flex items-center text-sm font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300">
                                             View Project
                                             <svg className="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                                 <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                                             </svg>
                                         </Link>
+                                        <button 
+                                            onClick={() => router.post(route('projects.archive', project.id))}
+                                            className="rounded-lg p-2 text-neutral-400 hover:bg-neutral-100 hover:text-red-500 transition-colors dark:hover:bg-neutral-800"
+                                            title="Archive Project"
+                                        >
+                                            <Archive className="h-4 w-4" />
+                                        </button>
                                     </div>
                                 </div>
                             );

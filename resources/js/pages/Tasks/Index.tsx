@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { type BreadcrumbItem } from '@/types';
-import { Plus, GripVertical, CheckCircle2, Clock, Circle, ArrowRight, User as UserIcon, AlertTriangle, ListFilter } from 'lucide-react';
+import { type BreadcrumbItem, type SharedData } from '@/types';
+import { Plus, GripVertical, CheckCircle2, Clock, Circle, AlertTriangle, ListFilter, Play, Square } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 
 type Task = {
@@ -14,6 +14,8 @@ type Task = {
   assignees: { id: number, name: string }[];
   checklists_count?: number;
   completed_checklists_count?: number;
+  total_minutes?: number;
+  is_timer_running?: boolean;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -21,7 +23,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Tasks({ tasks: initialTasks = [] }: { tasks: Task[] }) {
-  const { auth } = usePage().props as any;
+  const { auth } = usePage().props as unknown as SharedData;
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'me' | 'urgent'>('all');
@@ -51,6 +53,14 @@ export default function Tasks({ tasks: initialTasks = [] }: { tasks: Task[] }) {
     router.put(`/tasks/${task.id}`, { status }, { preserveScroll: true, preserveState: true });
   };
 
+  const toggleTimer = (task: Task) => {
+    if (task.is_timer_running) {
+        router.post(`/tasks/${task.id}/timer/stop`, {}, { preserveScroll: true });
+    } else {
+        router.post(`/tasks/${task.id}/timer/start`, {}, { preserveScroll: true });
+    }
+  };
+
   const handleDragStart = (e: React.DragEvent, taskId: number) => {
     e.dataTransfer.setData('taskId', taskId.toString());
   };
@@ -75,6 +85,21 @@ export default function Tasks({ tasks: initialTasks = [] }: { tasks: Task[] }) {
         case 'in_progress': return <Clock className="h-4 w-4 text-blue-500" />;
         case 'done': return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
         default: return null;
+    }
+  };
+
+  const getPriorityStyles = (priority: string) => {
+    switch (priority) {
+      case 'urgent': 
+        return 'bg-red-500 text-white ring-red-600/50 dark:bg-red-900 dark:text-red-300 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.4)]';
+      case 'high': 
+        return 'bg-orange-100 text-orange-700 ring-orange-600/20 dark:bg-orange-900/40 dark:text-orange-400';
+      case 'medium': 
+        return 'bg-blue-100 text-blue-700 ring-blue-600/20 dark:bg-blue-900/40 dark:text-blue-400';
+      case 'low': 
+        return 'bg-emerald-100 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-900/40 dark:text-emerald-400';
+      default: 
+        return 'bg-neutral-100 text-neutral-700 ring-neutral-600/20 dark:bg-neutral-800 dark:text-neutral-400';
     }
   };
 
@@ -130,10 +155,10 @@ export default function Tasks({ tasks: initialTasks = [] }: { tasks: Task[] }) {
                 {task.description && <p className="mb-4 line-clamp-2 text-sm text-neutral-500 dark:text-neutral-400">{task.description}</p>}
                 
                 <div className="mb-4 flex flex-wrap gap-2">
-                    {task.priority === 'urgent' && <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10 dark:bg-red-900/30 dark:text-red-400 dark:ring-red-500/20">Urgent</span>}
-                    {task.priority === 'high' && <span className="inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700 ring-1 ring-inset ring-orange-600/10 dark:bg-orange-900/30 dark:text-orange-400 dark:ring-orange-500/20">High</span>}
-                    {task.priority === 'low' && <span className="inline-flex items-center rounded-md bg-neutral-50 px-2 py-1 text-xs font-medium text-neutral-600 ring-1 ring-inset ring-neutral-500/10 dark:bg-neutral-800 dark:text-neutral-400 dark:ring-neutral-700">Low</span>}
-                    {task.checklists_count && task.checklists_count > 0 && (
+                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset ${getPriorityStyles(task.priority)}`}>
+                        {task.priority}
+                    </span>
+                    {(task.checklists_count ?? 0) > 0 && (
                         <span className="inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-600 ring-1 ring-inset ring-neutral-500/10 dark:bg-neutral-800 dark:text-neutral-400">
                             <ListFilter className="h-3 w-3" />
                             {task.completed_checklists_count}/{task.checklists_count}
@@ -145,26 +170,45 @@ export default function Tasks({ tasks: initialTasks = [] }: { tasks: Task[] }) {
                             {new Date(task.due_date).toLocaleDateString(undefined, {month:'short', day:'numeric'})}
                         </span>
                     )}
+                    {(task.total_minutes ?? 0) > 0 && (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-600 ring-1 ring-inset ring-neutral-500/10 dark:bg-neutral-800 dark:text-neutral-400">
+                            <Clock className="h-3 w-3" />
+                            {Math.floor((task.total_minutes || 0) / 60)}h {Math.round((task.total_minutes || 0) % 60)}m
+                        </span>
+                    )}
                 </div>
 
                 <div className="mt-auto flex items-center justify-between border-t border-neutral-100 pt-3 dark:border-neutral-800">
-                    <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                        {task.status !== 'todo' && (
-                            <button onClick={() => updateStatus(task, 'todo')} title="Move to To Do" className="rounded bg-neutral-100 p-1 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700">
-                                <Circle className="h-4 w-4" />
-                            </button>
-                        )}
-                        {task.status !== 'in_progress' && (
-                            <button onClick={() => updateStatus(task, 'in_progress')} title="Move to In Progress" className="rounded bg-blue-50 p-1 text-blue-500 hover:bg-blue-100 hover:text-blue-700 dark:bg-blue-900/20 dark:hover:bg-blue-900/40">
-                                <Clock className="h-4 w-4" />
-                            </button>
-                        )}
+                    <div className="flex items-center gap-1">
                         {task.status !== 'done' && (
-                            <button onClick={() => updateStatus(task, 'done')} title="Move to Done" className="rounded bg-emerald-50 p-1 text-emerald-500 hover:bg-emerald-100 hover:text-emerald-700 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40">
-                                <CheckCircle2 className="h-4 w-4" />
+                            <button 
+                                onClick={() => toggleTimer(task)} 
+                                title={task.is_timer_running ? "Stop Timer" : "Start Timer"} 
+                                className={`rounded p-1.5 transition-colors cursor-pointer ${task.is_timer_running ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400'}`}
+                            >
+                                {task.is_timer_running ? <Square className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4 fill-current" />}
                             </button>
                         )}
+                        
+                        <div className="ml-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                            {task.status !== 'todo' && (
+                                <button onClick={() => updateStatus(task, 'todo')} title="Move to To Do" className="rounded bg-neutral-100 p-1 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700">
+                                    <Circle className="h-4 w-4" />
+                                </button>
+                            )}
+                            {task.status !== 'in_progress' && (
+                                <button onClick={() => updateStatus(task, 'in_progress')} title="Move to In Progress" className="rounded bg-blue-50 p-1 text-blue-500 hover:bg-blue-100 hover:text-blue-700 dark:bg-blue-900/20 dark:hover:bg-blue-900/40">
+                                    <Clock className="h-4 w-4" />
+                                </button>
+                            )}
+                            {task.status !== 'done' && (
+                                <button onClick={() => updateStatus(task, 'done')} title="Move to Done" className="rounded bg-emerald-50 p-1 text-emerald-500 hover:bg-emerald-100 hover:text-emerald-700 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40">
+                                    <CheckCircle2 className="h-4 w-4" />
+                                </button>
+                            )}
+                        </div>
                     </div>
+
                     {task.assignees && task.assignees.length > 0 ? (
                         <div className="flex -space-x-2">
                             {task.assignees.map(assignee => (

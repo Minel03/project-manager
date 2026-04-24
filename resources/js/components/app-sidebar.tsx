@@ -2,9 +2,9 @@ import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { Briefcase, CheckSquare, LayoutGrid, Users } from 'lucide-react';
+import { type NavItem, type SharedData } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
+import { Briefcase, CheckSquare, LayoutGrid, Users, Calendar } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -28,6 +28,11 @@ const mainNavItems: NavItem[] = [
         url: '/teams',
         icon: Users,
     },
+    {
+        title: 'Calendar',
+        url: '/calendar',
+        icon: Calendar,
+    },
 ];
 
 const footerNavItems: NavItem[] = [
@@ -44,6 +49,19 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage<SharedData>().props;
+
+    const navItems = [...mainNavItems];
+
+    // Add Users management only for admins
+    if (auth.user?.role === 'admin') {
+        navItems.push({
+            title: 'Users',
+            url: '/users',
+            icon: Users,
+        });
+    }
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -59,7 +77,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={navItems} />
             </SidebarContent>
 
             <SidebarFooter>
