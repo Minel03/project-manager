@@ -22,6 +22,11 @@ class TaskController extends Controller
     public function index()
     {
         $tasks = Task::with(['assignees', 'timeLogs'])
+            ->when(Auth::user()?->role !== 'admin', function ($query) {
+                $query->whereHas('assignees', function($q) {
+                    $q->where('users.id', Auth::id());
+                });
+            })
             ->withCount(['checklists', 'checklists as completed_checklists_count' => function ($query) {
                 $query->where('is_completed', true);
             }])

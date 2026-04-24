@@ -19,9 +19,10 @@ interface UserSelectProps {
     selectedIds: number[];
     onChange: (ids: number[]) => void;
     placeholder?: string;
+    disabled?: boolean;
 }
 
-export function UserSelect({ users, selectedIds, onChange, placeholder = "Select assignees..." }: UserSelectProps) {
+export function UserSelect({ users, selectedIds, onChange, placeholder = "Select assignees...", disabled = false }: UserSelectProps) {
     const [query, setQuery] = React.useState("");
     
     const selectedUsers = users.filter(u => selectedIds.includes(u.id));
@@ -40,7 +41,7 @@ export function UserSelect({ users, selectedIds, onChange, placeholder = "Select
     return (
         <div className="space-y-2">
             <Popover className="relative w-full">
-                <PopoverButton className="flex min-h-[44px] w-full items-center justify-between rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition-all hover:border-indigo-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:hover:border-indigo-500">
+                <PopoverButton disabled={disabled} className="flex min-h-[44px] w-full items-center justify-between rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition-all hover:border-indigo-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
                     <div className="flex flex-wrap gap-1.5">
                         {selectedUsers.length > 0 ? (
                             selectedUsers.map(u => (

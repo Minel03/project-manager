@@ -11,11 +11,18 @@ class ProjectController extends Controller
 {
     public function index()
     {
+        $projects = Project::where('is_archived', false)
+            ->when(\Illuminate\Support\Facades\Auth::user()?->role !== 'admin', function ($query) {
+                $query->whereHas('tasks.assignees', function($q) {
+                    $q->where('users.id', \Illuminate\Support\Facades\Auth::id());
+                });
+            })
+            ->withCount(['tasks', 'tasks as completed_tasks_count' => function ($query) {
+                $query->where('status', 'done');
+            }])->get();
+
         return Inertia::render('Projects/Index', [
-            'projects' => Project::where('is_archived', false)
-                ->withCount(['tasks', 'tasks as completed_tasks_count' => function ($query) {
-                    $query->where('status', 'done');
-                }])->get()
+            'projects' => $projects
         ]);
     }
 
@@ -47,7 +54,13 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
-        $project->load(['tasks.assignees', 'tasks.timeLogs']);
+        $project->load(['tasks' => function ($query) {
+            $query->when(\Illuminate\Support\Facades\Auth::user()?->role !== 'admin', function ($q) {
+                $q->whereHas('assignees', function($q2) {
+                    $q2->where('users.id', \Illuminate\Support\Facades\Auth::id());
+                });
+            })->with(['assignees', 'timeLogs']);
+        }]);
         
         // Analytics Data
         $timeDistribution = $project->tasks->map(function ($task) {

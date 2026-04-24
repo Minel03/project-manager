@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, useForm, router, usePoll } from '@inertiajs/react';
-import { type BreadcrumbItem } from '@/types';
+import { Head, Link, useForm, router, usePoll, usePage } from '@inertiajs/react';
+import { type BreadcrumbItem, type SharedData } from '@/types';
 import { FolderKanban, ListTodo, CheckCircle2, Clock, Users, UserPlus, X, BarChart3, PieChart as PieIcon, LineChart as LineIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -81,6 +81,9 @@ export default function ShowProject({ project, team, availableUsers, analytics, 
     analytics: AnalyticsData,
     activities: Activity[]
 }) {
+  const { auth } = usePage<SharedData>().props;
+  const isAdmin = auth.user?.role === 'admin';
+
   usePoll(5000); // Soft real-time: refresh data every 5s
   
   const breadcrumbs: BreadcrumbItem[] = [
@@ -138,9 +141,11 @@ export default function ShowProject({ project, team, availableUsers, analytics, 
                       <div className="h-full bg-indigo-600 transition-all duration-500" style={{ width: `${progress}%` }}></div>
                   </div>
               </div>
-              <Link href={route('tasks.create', { project_id: project.id })} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700">
-                New Task
-              </Link>
+              {isAdmin && (
+                  <Link href={route('tasks.create', { project_id: project.id })} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700">
+                    New Task
+                  </Link>
+              )}
           </div>
         </div>
 
@@ -174,31 +179,33 @@ export default function ShowProject({ project, team, availableUsers, analytics, 
                         </p>
                     </div>
 
-                    <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-                        <h3 className="mb-4 text-sm font-bold text-neutral-900 dark:text-white uppercase tracking-wider">Live Activity</h3>
-                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
-                            {activities.length === 0 ? (
-                                <p className="text-xs text-neutral-500 italic">No activity yet.</p>
-                            ) : (
-                                activities.map(activity => (
-                                    <div key={activity.id} className="flex gap-3">
-                                        <Avatar className="h-6 w-6 shrink-0">
-                                            <AvatarImage src={`https://avatar.vercel.sh/${activity.user.email}`} />
-                                            <AvatarFallback>{activity.user.name.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-[11px] leading-tight text-neutral-700 dark:text-neutral-300">
-                                                <span className="font-bold">{activity.user.name}</span> {activity.description}
-                                            </p>
-                                            <p className="mt-0.5 text-[9px] text-neutral-400">
-                                                {new Date(activity.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </p>
+                    {isAdmin && (
+                        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+                            <h3 className="mb-4 text-sm font-bold text-neutral-900 dark:text-white uppercase tracking-wider">Live Activity</h3>
+                            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
+                                {activities.length === 0 ? (
+                                    <p className="text-xs text-neutral-500 italic">No activity yet.</p>
+                                ) : (
+                                    activities.map(activity => (
+                                        <div key={activity.id} className="flex gap-3">
+                                            <Avatar className="h-6 w-6 shrink-0">
+                                                <AvatarImage src={`https://avatar.vercel.sh/${activity.user.email}`} />
+                                                <AvatarFallback>{activity.user.name.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-[11px] leading-tight text-neutral-700 dark:text-neutral-300">
+                                                    <span className="font-bold">{activity.user.name}</span> {activity.description}
+                                                </p>
+                                                <p className="mt-0.5 text-[9px] text-neutral-400">
+                                                    {new Date(activity.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))
-                            )}
+                                    ))
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 <div className="lg:col-span-3 space-y-6">
@@ -516,9 +523,11 @@ export default function ShowProject({ project, team, availableUsers, analytics, 
                                     <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 uppercase">
                                         {user.pivot?.role || 'member'}
                                     </span>
-                                    <Button variant="ghost" size="icon" onClick={() => removeMember(user.id)}>
-                                        <X className="h-4 w-4 text-neutral-400 hover:text-red-500" />
-                                    </Button>
+                                    {isAdmin && (
+                                        <Button variant="ghost" size="icon" onClick={() => removeMember(user.id)}>
+                                            <X className="h-4 w-4 text-neutral-400 hover:text-red-500" />
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         ))}

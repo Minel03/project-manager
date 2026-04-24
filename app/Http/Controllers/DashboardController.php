@@ -12,16 +12,41 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $isAdmin = \Illuminate\Support\Facades\Auth::user()?->role === 'admin';
+        $userId = \Illuminate\Support\Facades\Auth::id();
+
         $projects = Project::where('is_archived', false)
-            ->withCount(['tasks', 'tasks as completed_count' => function($q) {
-                $q->where('status', 'done');
+            ->when(!$isAdmin, function ($query) use ($userId) {
+                $query->whereHas('tasks.assignees', function($q) use ($userId) {
+                    $q->where('users.id', $userId);
+                });
+            })
+            ->withCount(['tasks' => function($q) use ($isAdmin, $userId) {
+                $q->when(!$isAdmin, function($q2) use ($userId) {
+                    $q2->whereHas('assignees', function($q3) use ($userId) {
+                        $q3->where('users.id', $userId);
+                    });
+                });
+            }, 'tasks as completed_count' => function($q) use ($isAdmin, $userId) {
+                $q->where('status', 'done')
+                  ->when(!$isAdmin, function($q2) use ($userId) {
+                      $q2->whereHas('assignees', function($q3) use ($userId) {
+                          $q3->where('users.id', $userId);
+                      });
+                  });
             }])
             ->get();
 
+        $taskQuery = Task::when(!$isAdmin, function ($query) use ($userId) {
+            $query->whereHas('assignees', function($q) use ($userId) {
+                $q->where('users.id', $userId);
+            });
+        });
+
         $statusData = [
-            ['name' => 'To Do', 'value' => Task::where('status', 'todo')->count(), 'color' => '#6366f1'],
-            ['name' => 'In Progress', 'value' => Task::where('status', 'in_progress')->count(), 'color' => '#f59e0b'],
-            ['name' => 'Done', 'value' => Task::where('status', 'done')->count(), 'color' => '#10b981'],
+            ['name' => 'To Do', 'value' => (clone $taskQuery)->where('status', 'todo')->count(), 'color' => '#6366f1'],
+            ['name' => 'In Progress', 'value' => (clone $taskQuery)->where('status', 'in_progress')->count(), 'color' => '#f59e0b'],
+            ['name' => 'Done', 'value' => (clone $taskQuery)->where('status', 'done')->count(), 'color' => '#10b981'],
         ];
 
         $weeklyProgress = [];
@@ -29,6 +54,9 @@ class DashboardController extends Controller
             $date = now()->subDays($i);
             $count = \App\Models\Activity::where('type', 'task_completed')
                 ->whereDate('created_at', $date->format('Y-m-d'))
+                ->when(!$isAdmin, function($q) use ($userId) {
+                    $q->where('user_id', $userId);
+                })
                 ->count();
             $weeklyProgress[] = [
                 'day' => $date->format('D'),
@@ -36,19 +64,24 @@ class DashboardController extends Controller
             ];
         }
 
+        $activities = \App\Models\Activity::with(['user', 'project', 'task'])
+            ->when(!$isAdmin, function($q) use ($userId) {
+                $q->where('user_id', $userId);
+            })
+            ->latest()
+            ->take(8)
+            ->get();
+
         return Inertia::render('dashboard', [
             'stats' => [
                 'totalProjects' => $projects->count(),
-                'totalTasks' => Task::count(),
-                'completedTasks' => Task::where('status', 'done')->count(),
+                'totalTasks' => (clone $taskQuery)->count(),
+                'completedTasks' => (clone $taskQuery)->where('status', 'done')->count(),
             ],
             'projects' => $projects,
             'statusData' => $statusData,
             'weeklyProgress' => $weeklyProgress,
-            'recentActivity' => \App\Models\Activity::with(['user', 'project', 'task'])
-                ->latest()
-                ->take(8)
-                ->get()
+            'recentActivity' => $activities
         ]);
     }
 }

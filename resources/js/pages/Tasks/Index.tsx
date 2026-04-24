@@ -24,6 +24,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function Tasks({ tasks: initialTasks = [] }: { tasks: Task[] }) {
   const { auth } = usePage().props as unknown as SharedData;
+  const isAdmin = auth.user?.role === 'admin';
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'me' | 'urgent'>('all');
@@ -245,12 +246,14 @@ export default function Tasks({ tasks: initialTasks = [] }: { tasks: Task[] }) {
                     >
                         All
                     </button>
-                    <button 
-                        onClick={() => setActiveFilter('me')}
-                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${activeFilter === 'me' ? 'bg-white text-indigo-600 shadow-sm dark:bg-neutral-700 dark:text-indigo-400' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}
-                    >
-                        My Tasks
-                    </button>
+                    {isAdmin && (
+                        <button 
+                            onClick={() => setActiveFilter('me')}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${activeFilter === 'me' ? 'bg-white text-indigo-600 shadow-sm dark:bg-neutral-700 dark:text-indigo-400' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}
+                        >
+                            My Tasks
+                        </button>
+                    )}
                     <button 
                         onClick={() => setActiveFilter('urgent')}
                         className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${activeFilter === 'urgent' ? 'bg-white text-indigo-600 shadow-sm dark:bg-neutral-700 dark:text-indigo-400' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}
@@ -267,10 +270,12 @@ export default function Tasks({ tasks: initialTasks = [] }: { tasks: Task[] }) {
                         className="rounded-lg border-neutral-300 pl-4 pr-4 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
                     />
                 </div>
-                <Link href="/tasks/create" className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow">
-                    <Plus className="h-4 w-4" />
-                    Create Task
-                </Link>
+                {auth.user?.role === 'admin' && (
+                    <Link href="/tasks/create" className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow">
+                        <Plus className="h-4 w-4" />
+                        Create Task
+                    </Link>
+                )}
             </div>
         </div>
 

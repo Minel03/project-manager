@@ -1,7 +1,7 @@
 import { DatePicker } from '@/components/ui/date-picker';
 import { UserSelect } from '@/components/ui/user-select';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
+import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { format } from 'date-fns';
@@ -70,8 +70,9 @@ type Task = {
 };
 
 export default function ShowTask({ task, users, allTasks }: { task: Task; users: User[]; allTasks: { id: number; title: string }[] }) {
-    const { props } = usePage();
-    const serverErrors = props.errors as unknown as Record<string, string>;
+    const { auth, errors } = usePage<SharedData>().props;
+    const serverErrors = errors as unknown as Record<string, string>;
+    const isAdmin = auth.user?.role === 'admin';
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Tasks', href: '/tasks' },
@@ -263,7 +264,7 @@ export default function ShowTask({ task, users, allTasks }: { task: Task; users:
                             <span className="text-neutral-300 dark:text-neutral-600">•</span>
                             <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400">#TASK-{task.id}</span>
                         </div>
-                        {isEditingTitle ? (
+                        {isEditingTitle && isAdmin ? (
                             <input
                                 autoFocus
                                 className="w-full rounded-lg border-neutral-300 bg-white px-2 py-1 text-3xl font-bold tracking-tight text-neutral-900 focus:border-indigo-500 focus:ring-indigo-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
@@ -274,8 +275,8 @@ export default function ShowTask({ task, users, allTasks }: { task: Task; users:
                             />
                         ) : (
                             <h1
-                                onClick={() => setIsEditingTitle(true)}
-                                className="cursor-pointer rounded-lg border border-transparent px-1 text-3xl font-bold tracking-tight text-neutral-900 hover:border-neutral-200 hover:bg-neutral-50 dark:text-white dark:hover:border-neutral-700 dark:hover:bg-neutral-800/50"
+                                onClick={() => isAdmin && setIsEditingTitle(true)}
+                                className={`${isAdmin ? 'cursor-pointer hover:border-neutral-200 hover:bg-neutral-50 dark:hover:border-neutral-700 dark:hover:bg-neutral-800/50' : ''} rounded-lg border border-transparent px-1 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white`}
                             >
                                 {task.title}
                             </h1>
@@ -295,7 +296,7 @@ export default function ShowTask({ task, users, allTasks }: { task: Task; users:
                         <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
                             <div className="mb-4 flex items-center justify-between">
                                 <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">Description</h2>
-                                {!isEditingDesc && (
+                                {!isEditingDesc && isAdmin && (
                                     <button
                                         onClick={() => setIsEditingDesc(true)}
                                         className="text-xs font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
@@ -305,7 +306,7 @@ export default function ShowTask({ task, users, allTasks }: { task: Task; users:
                                 )}
                             </div>
                             <div className="prose prose-sm dark:prose-invert max-w-none text-neutral-600 dark:text-neutral-300">
-                                {isEditingDesc ? (
+                                {isEditingDesc && isAdmin ? (
                                     <div className="space-y-3">
                                         <textarea
                                             autoFocus
@@ -335,17 +336,17 @@ export default function ShowTask({ task, users, allTasks }: { task: Task; users:
                                     </div>
                                 ) : task.description ? (
                                     <p
-                                        onClick={() => setIsEditingDesc(true)}
-                                        className="cursor-pointer leading-relaxed whitespace-pre-wrap transition-colors hover:text-neutral-900 dark:hover:text-white"
+                                        onClick={() => isAdmin && setIsEditingDesc(true)}
+                                        className={`${isAdmin ? 'cursor-pointer hover:text-neutral-900 dark:hover:text-white' : ''} leading-relaxed whitespace-pre-wrap transition-colors`}
                                     >
                                         {task.description}
                                     </p>
                                 ) : (
                                     <p
-                                        onClick={() => setIsEditingDesc(true)}
-                                        className="cursor-pointer text-neutral-400 italic transition-colors hover:text-neutral-500"
+                                        onClick={() => isAdmin && setIsEditingDesc(true)}
+                                        className={`${isAdmin ? 'cursor-pointer hover:text-neutral-500' : ''} text-neutral-400 italic transition-colors`}
                                     >
-                                        No description provided. Click to add one.
+                                        No description provided.{isAdmin && ' Click to add one.'}
                                     </p>
                                 )}
                             </div>
@@ -365,7 +366,7 @@ export default function ShowTask({ task, users, allTasks }: { task: Task; users:
                                 </div>
                                 
                                 <div className="flex flex-wrap items-center gap-2">
-                                    {selectedChecklistIds.length > 0 && (
+                                    {isAdmin && selectedChecklistIds.length > 0 && (
                                         <button
                                             onClick={bulkDeleteChecklists}
                                             className="flex items-center gap-2 whitespace-nowrap rounded-lg bg-red-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-red-700 active:scale-95"
@@ -374,7 +375,7 @@ export default function ShowTask({ task, users, allTasks }: { task: Task; users:
                                             <span>Delete {selectedChecklistIds.length}</span>
                                         </button>
                                     )}
-                                    {task.checklists.some(i => i.is_completed) && selectedChecklistIds.length === 0 && (
+                                    {isAdmin && task.checklists.some(i => i.is_completed) && selectedChecklistIds.length === 0 && (
                                         <button
                                             onClick={() => {
                                                 if (confirm('Are you sure you want to delete all completed items?')) {
@@ -387,14 +388,16 @@ export default function ShowTask({ task, users, allTasks }: { task: Task; users:
                                             <span>Clear Completed</span>
                                         </button>
                                     )}
-                                    <button
-                                        onClick={generateAIBreakdown}
-                                        disabled={isGeneratingAI}
-                                        className="flex items-center gap-2 whitespace-nowrap rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 transition-all hover:bg-indigo-100 disabled:opacity-50 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
-                                    >
-                                        {isGeneratingAI ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-                                        <span>{isGeneratingAI ? 'Generating...' : 'AI Breakdown'}</span>
-                                    </button>
+                                    {isAdmin && (
+                                        <button
+                                            onClick={generateAIBreakdown}
+                                            disabled={isGeneratingAI}
+                                            className="flex items-center gap-2 whitespace-nowrap rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 transition-all hover:bg-indigo-100 disabled:opacity-50 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
+                                        >
+                                            {isGeneratingAI ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                                            <span>{isGeneratingAI ? 'Generating...' : 'AI Breakdown'}</span>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
@@ -436,36 +439,40 @@ export default function ShowTask({ task, users, allTasks }: { task: Task; users:
                                                     {item.content}
                                                 </span>
                                             </div>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    deleteChecklistItem(item.id);
-                                                }}
-                                                className="p-1 text-neutral-400 opacity-0 transition-all group-hover:opacity-100 hover:text-red-500"
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </button>
+                                            {isAdmin && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        deleteChecklistItem(item.id);
+                                                    }}
+                                                    className="p-1 text-neutral-400 opacity-0 transition-all group-hover:opacity-100 hover:text-red-500"
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </button>
+                                            )}
                                         </div>
                                     ))
                                 )}
                             </div>
 
-                            <form onSubmit={addChecklistItem} className="flex items-center gap-2">
-                                <input
-                                    type="text"
-                                    placeholder="Add a sub-task..."
-                                    value={checklistForm.data.content}
-                                    onChange={(e) => checklistForm.setData('content', e.target.value)}
-                                    className="h-11 flex-1 rounded-xl border-neutral-200 bg-neutral-50 px-4 text-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:placeholder:text-neutral-500"
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={checklistForm.processing}
-                                    className="h-11 rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 hover:shadow-md active:scale-95 disabled:opacity-50"
-                                >
-                                    Add
-                                </button>
-                            </form>
+                            {isAdmin && (
+                                <form onSubmit={addChecklistItem} className="flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Add a sub-task..."
+                                        value={checklistForm.data.content}
+                                        onChange={(e) => checklistForm.setData('content', e.target.value)}
+                                        className="h-11 flex-1 rounded-xl border-neutral-200 bg-neutral-50 px-4 text-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:placeholder:text-neutral-500"
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={checklistForm.processing}
+                                        className="h-11 rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 hover:shadow-md active:scale-95 disabled:opacity-50"
+                                    >
+                                        Add
+                                    </button>
+                                </form>
+                            )}
                         </div>
 
                         {/* Attachments Section */}
@@ -636,6 +643,7 @@ export default function ShowTask({ task, users, allTasks }: { task: Task; users:
                                         users={users}
                                         selectedIds={task.assignees?.map((a) => a.id) || []}
                                         onChange={(ids) => updateField('assignees', ids)}
+                                        disabled={!isAdmin}
                                     />
                                 </div>
 
@@ -645,7 +653,8 @@ export default function ShowTask({ task, users, allTasks }: { task: Task; users:
                            <select
                                value={task.blocked_by_id || ''}
                                onChange={(e) => updateField('blocked_by_id', e.target.value ? Number(e.target.value) : null)}
-                               className="block w-full rounded-lg border-neutral-300 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                               className="block w-full rounded-lg border-neutral-300 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                               disabled={!isAdmin}
                            >
                                <option value="">None</option>
                                {allTasks?.filter(t => t.id !== task.id).map(t => (
@@ -674,7 +683,8 @@ export default function ShowTask({ task, users, allTasks }: { task: Task; users:
                                     <select
                                         value={task.priority}
                                         onChange={(e) => updateField('priority', e.target.value)}
-                                        className="block w-full rounded-lg border-neutral-300 py-2 pr-10 pl-3 text-sm focus:border-blue-500 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                                        className="block w-full rounded-lg border-neutral-300 py-2 pr-10 pl-3 text-sm focus:border-blue-500 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                        disabled={!isAdmin}
                                     >
                                         <option value="low">Low</option>
                                         <option value="medium">Medium</option>
@@ -691,22 +701,25 @@ export default function ShowTask({ task, users, allTasks }: { task: Task; users:
                                     <DatePicker
                                         date={task.due_date ? new Date(task.due_date) : undefined}
                                         onChange={(date) => updateField('due_date', format(date, 'yyyy-MM-dd'))}
+                                        disabled={!isAdmin}
                                     />
                                 </div>
 
-                                <div className="mt-6 border-t border-neutral-100 pt-6 dark:border-neutral-800">
-                                    <button
-                                        onClick={() => {
-                                            if (confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
-                                                router.delete(`/tasks/${task.id}`);
-                                            }
-                                        }}
-                                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-100 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                        Delete Task
-                                    </button>
-                                </div>
+                                {isAdmin && (
+                                    <div className="mt-6 border-t border-neutral-100 pt-6 dark:border-neutral-800">
+                                        <button
+                                            onClick={() => {
+                                                if (confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+                                                    router.delete(`/tasks/${task.id}`);
+                                                }
+                                            }}
+                                            className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-100 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            Delete Task
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

@@ -10,8 +10,14 @@ class TeamController extends Controller
 {
     public function index()
     {
+        $teams = Team::when(\Illuminate\Support\Facades\Auth::user()?->role !== 'admin', function ($query) {
+            $query->whereHas('users', function ($q) {
+                $q->where('users.id', \Illuminate\Support\Facades\Auth::id());
+            });
+        })->get();
+
         return Inertia::render('Teams/Index', [
-            'teams' => Team::all(),
+            'teams' => $teams,
         ]);
     }
 

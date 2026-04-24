@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link } from '@inertiajs/react';
-import { type BreadcrumbItem } from '@/types';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Users, Plus } from 'lucide-react';
 
 type Team = {
@@ -14,6 +14,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Teams({ teams = [] }: { teams: Team[] }) {
+  const { auth } = usePage<SharedData>().props;
+  const isAdmin = auth.user?.role === 'admin';
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Teams" />
@@ -23,10 +26,12 @@ export default function Teams({ teams = [] }: { teams: Team[] }) {
                 <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">Teams</h1>
                 <p className="mt-1 text-neutral-500 dark:text-neutral-400">Manage your teams and collaborations.</p>
             </div>
-            <Link href="/teams/create" className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-emerald-700 hover:shadow">
-                <Plus className="h-4 w-4" />
-                Create Team
-            </Link>
+            {isAdmin && (
+                <Link href="/teams/create" className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-emerald-700 hover:shadow">
+                    <Plus className="h-4 w-4" />
+                    Create Team
+                </Link>
+            )}
         </div>
 
         {teams?.length === 0 ? (
@@ -36,9 +41,11 @@ export default function Teams({ teams = [] }: { teams: Team[] }) {
                 </div>
                 <h3 className="mb-1 text-xl font-semibold text-neutral-900 dark:text-white">No teams yet</h3>
                 <p className="mb-6 max-w-sm text-neutral-500 dark:text-neutral-400">Create a team to group your projects and manage permissions easily.</p>
-                <Link href="/teams/create" className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-emerald-700">
-                    Create your first team
-                </Link>
+                {isAdmin && (
+                    <Link href="/teams/create" className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-emerald-700">
+                        Create your first team
+                    </Link>
+                )}
             </div>
         ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -52,14 +59,16 @@ export default function Teams({ teams = [] }: { teams: Team[] }) {
                             <h2 className="mb-2 line-clamp-1 text-xl font-bold text-neutral-900 dark:text-white">{team.name}</h2>
                             <p className="line-clamp-2 text-sm text-neutral-500 dark:text-neutral-400">{team.description}</p>
                         </div>
-                        <div className="relative z-10 mt-6 border-t border-neutral-100 pt-4 dark:border-neutral-800">
-                            <Link href={`/teams/${team.id}`} className="inline-flex items-center text-sm font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300">
-                                Manage Team
-                                <svg className="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                                </svg>
-                            </Link>
-                        </div>
+                        {isAdmin && (
+                            <div className="relative z-10 mt-6 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                                <Link href={`/teams/${team.id}`} className="inline-flex items-center text-sm font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300">
+                                    Manage Team
+                                    <svg className="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                </Link>
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>
