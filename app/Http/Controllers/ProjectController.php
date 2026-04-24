@@ -34,18 +34,17 @@ class ProjectController extends Controller
 
     public function create()
     {
-        return Inertia::render('Projects/Create');
+        $teams = \App\Models\Team::all();
+        return Inertia::render('Projects/Create', ['teams' => $teams]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
+            'team_id'     => 'required|exists:teams,id',
         ]);
-
-        // Default team_id for now as we don't have teams setup fully
-        $validated['team_id'] = 1; 
 
         Project::create($validated);
 

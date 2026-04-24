@@ -2,16 +2,21 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, useForm } from '@inertiajs/react';
 import { type BreadcrumbItem } from '@/types';
 
+interface Team {
+    id: number;
+    name: string;
+}
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Projects', href: '/projects' },
     { title: 'Create', href: '/projects/create' },
 ];
 
-export default function CreateProject() {
+export default function CreateProject({ teams }: { teams: Team[] }) {
   const { data, setData, post, processing, errors } = useForm({
     name: '',
     description: '',
-    team_id: 1, // default for now
+    team_id: teams.length === 1 ? teams[0].id : '',
   });
 
   function submit(e: React.FormEvent) {
@@ -52,6 +57,21 @@ export default function CreateProject() {
                     placeholder="Briefly describe the project's goals and scope..."
                   />
                   {errors.description && <div className="mt-1 text-sm text-red-500">{errors.description}</div>}
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">Team</label>
+                  <select
+                    value={data.team_id}
+                    onChange={e => setData('team_id', Number(e.target.value))}
+                    className="block w-full rounded-xl border-neutral-300 px-4 py-3 text-sm shadow-sm transition-colors focus:border-indigo-500 focus:ring-indigo-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:focus:border-indigo-500"
+                  >
+                    <option value="">Select a team...</option>
+                    {teams.map(team => (
+                      <option key={team.id} value={team.id}>{team.name}</option>
+                    ))}
+                  </select>
+                  {errors.team_id && <div className="mt-1 text-sm text-red-500">{errors.team_id}</div>}
                 </div>
             </div>
 
