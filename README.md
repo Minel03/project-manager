@@ -1,27 +1,43 @@
 # Taskly — Smart Project Management Platform
 
+## 🖥️ Demo
+
+Live Demo: [https://project-manager-main-wl3v0k.free.laravel.cloud/](https://project-manager-main-wl3v0k.free.laravel.cloud/)
+
+
 Taskly is a modern, full-stack project management application designed for high-performance teams. It provides a seamless experience for planning, tracking, and executing projects with real-time collaboration and AI-powered task management.
 
-## 🚀 Key Features
+## 🚀 Features
 
+### 📌 Smart Task Management
 - **Dynamic Kanban Boards**: Drag-and-drop tasks through custom workflows (Todo, In Progress, Done).
-- **AI Task Breakdown**: Automatically break down complex tasks into actionable subtasks using AI (powered by Groq).
-- **Real-Time Collaboration**: Instant updates across all clients using Laravel Reverb.
-- **Role-Based Access Control (RBAC)**: Granular permissions for Admins and Members to ensure data privacy.
-- **Comprehensive Analytics**: Visual time distribution, task completion rates, and productivity charts.
+- **AI Task Breakdown**: AI-generated subtasks for complex projects (powered by Groq).
 - **Interactive Calendar**: Full-view calendar to manage deadlines and project timelines.
-- **Team Management**: Organize users into teams with specific project assignments.
-- **Activity Logs**: Track every change, comment, and attachment with a detailed audit trail.
 
-## 🛠️ Tech Stack
+### 👥 Team Collaboration
+- **Real-Time Updates**: Instant synchronization across all clients using Laravel Reverb (WebSockets).
+- **Role-Based Permissions**: Admin & Member roles with secure project access control.
+- **Activity Logs**: Detailed audit trails for transparency and accountability.
 
-- **Backend**: Laravel 12 (PHP 8.2+)
-- **Frontend**: React, TypeScript, Tailwind CSS
-- **State Management**: Inertia.js (Modern monolith)
-- **Database**: PostgreSQL (Serverless) / SQLite (Local)
-- **Real-time**: Laravel Reverb
-- **AI Integration**: Groq API
-- **Deployment**: Laravel Cloud
+### 📊 Productivity Analytics
+- **Task Metrics**: Visual completion rates and productivity tracking.
+- **Time Distribution**: Insightful charts showing team focus and time allocation.
+- **Project Progress**: Real-time visualization of overall project health.
+
+
+## 🛠 Tech Stack
+
+| Layer | Technology |
+|------|-------------|
+| Backend | Laravel 12 (PHP 8.2+) |
+| Frontend | React + TypeScript |
+| Styling | Tailwind CSS |
+| State Management | Inertia.js |
+| Database | PostgreSQL / SQLite |
+| Realtime | Laravel Reverb |
+| AI | Groq API |
+| Deployment | Laravel Cloud |
+
 
 ## 📂 Project Structure
 
@@ -111,6 +127,11 @@ Taskly is optimized for **Laravel Cloud**. To deploy:
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## 🎯 Purpose of the Project
+
+Taskly was built as a portfolio project to demonstrate full-stack development skills using Laravel and React, including real-time communication, AI integration, and scalable project architecture.
+
 ## 📄 License
 
 The Laravel framework is open-source software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
